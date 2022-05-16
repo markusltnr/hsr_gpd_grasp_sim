@@ -184,7 +184,7 @@ def env():
 
     return paramIDs
 
-def visualize(obj_name, grasp_poses, buttonID):
+def visualize(obj_name, init_pos, init_ori, buttonID):
     # Plane
     #p.loadURDF("plane.urdf")
 
@@ -205,10 +205,11 @@ def visualize(obj_name, grasp_poses, buttonID):
     # Gripper
     #init_pos = np.copy(grasp_poses["grasp_pos"])
     #init_ori = np.copy(grasp_poses["grasp_ori"]) 
-
-    init_pos = np.copy(grasp_poses["grasp_transl"])
-    q = tf3d.quaternions.mat2quat(grasp_poses["grasp_rot"][:3,:3])
-    init_ori = [q[1], q[2], q[3], q[0]]
+        
+    #init_pos = np.copy(grasp_poses["grasp_transl"])
+    #print(init_pos)
+    #q = tf3d.quaternions.mat2quat(grasp_poses["grasp_rot"][:3,:3])
+    #init_ori = [q[1], q[2], q[3], q[0]]
 
     hand = RobotGripper(init_pos, init_ori)
 
@@ -239,12 +240,12 @@ def visualize(obj_name, grasp_poses, buttonID):
     p.changeConstraint(obj_constraint, maxForce=10)
 
     # color: red - orange - green for success_rate 0 - 100%
-    if grasp_poses["success_rate"] == 0.0:
-        p.addUserDebugText("Success rate: %.1f%%" % (grasp_poses["success_rate"] * 100), [0, 0, 0.6], textColorRGB=[1,0,0], textSize=1.5)
-    elif ((grasp_poses["success_rate"] > 0.0) and (grasp_poses["success_rate"] < 1.0)):
-        p.addUserDebugText("Success rate: %.1f%%" % (grasp_poses["success_rate"] * 100), [0, 0, 0.6], textColorRGB=[1,0.65,0], textSize=1.5)
-    else:
-        p.addUserDebugText("Success rate: %.1f%%" % (grasp_poses["success_rate"] * 100), [0, 0, 0.6], textColorRGB=[0,1,0], textSize=1.5)
+    # if grasp_poses["success_rate"] == 0.0:
+    #     p.addUserDebugText("Success rate: %.1f%%" % (grasp_poses["success_rate"] * 100), [0, 0, 0.6], textColorRGB=[1,0,0], textSize=1.5)
+    # elif ((grasp_poses["success_rate"] > 0.0) and (grasp_poses["success_rate"] < 1.0)):
+    #     p.addUserDebugText("Success rate: %.1f%%" % (grasp_poses["success_rate"] * 100), [0, 0, 0.6], textColorRGB=[1,0.65,0], textSize=1.5)
+    # else:
+    #     p.addUserDebugText("Success rate: %.1f%%" % (grasp_poses["success_rate"] * 100), [0, 0, 0.6], textColorRGB=[0,1,0], textSize=1.5)
 
     while (temp == p.readUserDebugParameter(buttonID)):
         # stay in the loop until the button has again been pressed
@@ -288,10 +289,27 @@ if __name__ == '__main__':
             print('There is no previous created grasp pose file for the object %s' % f)
             continue
         else:
-            grasp_poses = load_pickle_data(grasp_f)
-
-            for pose_key, pose_values in grasp_poses.items():
-                visualize(f, pose_values, paramIDs)
+            with open(grasp_dir+'/grasp.txt', 'r') as file:
+                grasps = np.fromstring(file.read(), np.float, sep=' ')
+                print(grasps.shape)
+                print(grasps.shape[0]/17)
+                grasps = grasps.reshape((int(grasps.shape[0]/17), 17))
+                print(grasps.shape)
+                
+            for grasp in grasps:
+                print(grasp)
+                score = grasp[0]
+                np.reshape
+                print(score)
+                grasp = np.reshape(grasp[1:], (4,4))
+                #print(grasp.shape)
+                #print(grasp)
+                init_pos = grasp[:3, 3]
+                rot = np.matmul(grasp[:3,:3], tf3d.euler.euler2mat(0,np.pi/2,0))
+                print(init_pos)
+                q = tf3d.quaternions.mat2quat(rot)
+                init_ori = [q[1], q[2], q[3], q[0]]
+                visualize(f, init_pos, init_ori, paramIDs)
 
     p.disconnect()
     
