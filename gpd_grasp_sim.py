@@ -577,33 +577,35 @@ if __name__ == '__main__':
 
     for f in frame_ids:
         print('File: %s\n' % f)
-
-        f_str = f.split('.')[0]
-        grasp_f = os.path.join(grasp_dir, f_str + '.pkl')
+        
+        grasp_f = f.replace('.obj', '.txt')
         exist_grasp_f = False
-
-        for a in frame_grasps:
-            if f_str == a.split('.')[0]:
+        if grasp_f in frame_grasps:
                 exist_grasp_f = True
 
-    with open(grasp_dir+'/grasp.txt', 'r') as file:
-        grasps = np.fromstring(file.read(), float, sep=' ')
-        grasps = grasps.reshape((int(grasps.shape[0]/17), 17))
-        
-    for grasp in grasps:
-        score = grasp[0]
-        grasp = np.reshape(grasp[1:], (4,4))
-        grasp_pos = grasp[:3, 3]
-        grasp_rot = np.matmul(grasp[:3,:3], tf3d.euler.euler2mat(0,np.pi/2,0))
-        q = tf3d.quaternions.mat2quat(grasp_rot)
-        grasp_ori = [q[1], q[2], q[3], q[0]]
-        success, grasp_result = grasp_example(f, grasp_pos, grasp_rot, paramIDs, num_grippers)              
-        success_rate = success/(num_samples*num_grippers)
-        if success_rate > 0.5:
-            successful_grasps.append(grasp_result)
+        if exist_grasp_f == False:
+            print('There is no input grasp pose file for the object %s' % f)
+            continue
+        else:
+            with open(os.path.join(grasp_dir, grasp_f), 'r') as file:
+                grasps = np.fromstring(file.read(), float, sep=' ')
+                grasps = grasps.reshape((int(grasps.shape[0]/17), 17))
+                
+            for grasp in grasps:
+                score = grasp[0]
+                grasp = np.reshape(grasp[1:], (4,4))
+                grasp_pos = grasp[:3, 3]
+                grasp_rot = np.matmul(grasp[:3,:3], tf3d.euler.euler2mat(0,np.pi/2,0))
+                q = tf3d.quaternions.mat2quat(grasp_rot)
+                grasp_ori = [q[1], q[2], q[3], q[0]]
+                success, grasp_result = grasp_example(f, grasp_pos, grasp_rot, paramIDs, num_grippers)              
+                success_rate = success/(num_samples*num_grippers)
+                if success_rate > 0.5:
+                    successful_grasps.append(grasp_result)
 
-    
-    file.close()
-    with open(grasp_dir+'/grasp_result.txt', 'w') as file:
-        file.write(np.array2string(np.asarray(successful_grasps).ravel(), separator=' '))
+            
+            file.close()
+            name = f.replace('.obj', '')
+            with open(os.path.join(grasp_dir, name+'_result.txt'), 'w') as file:
+                file.write(np.array2string(np.asarray(successful_grasps).ravel(), separator=' '))
     p.disconnect()

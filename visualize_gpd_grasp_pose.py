@@ -277,19 +277,17 @@ if __name__ == '__main__':
     for f in frame_ids:
         print('File: %s\n' % f)
 
-        f_str = f.split('.')[0]
-        grasp_f = os.path.join(grasp_dir, f_str + '.pkl')
+        grasp_f = f.replace('.obj', '.txt')
         exist_grasp_f = False
 
-        for a in frame_grasps:
-            if f_str == a.split('.')[0]:
+        if grasp_f in frame_grasps:
                 exist_grasp_f = True
 
         if exist_grasp_f == False:
             print('There is no previous created grasp pose file for the object %s' % f)
             continue
         else:
-            with open(grasp_dir+'/grasp.txt', 'r') as file:
+            with open(os.path.join(grasp_dir, grasp_f), 'r') as file:
                 grasps = np.fromstring(file.read(), np.float, sep=' ')
                 print(grasps.shape)
                 print(grasps.shape[0]/17)
