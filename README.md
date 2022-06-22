@@ -1,3 +1,11 @@
+# Grasp Simulation for GPD annotated Grasp Poses
+GPD repository: https://github.com/markusltnr/gpd
+
+### Usage:
+
+Put the object models as .obj files in the objs folder. Convert them to .ply format by running the convert_obj_to_ply.py script. Put the ply files into the objects folder in your gpd workspace and run the grasp annotation there (see Readme of gpd repo linked above). Copy the grasps txt files from your gpd workspace into the grasp_poses folder. Then you can run the simulation by running the gpd_grasp_sim.py script. For now, it will just reject grasps that are less than 50% succesfully simulated, and save the rest in a result file in the grasp_poses folder. 
+
+original readme:
 # hsr_hand_simulation
 
 The physical simulation for the hand of HSR Robot (Sasha)
